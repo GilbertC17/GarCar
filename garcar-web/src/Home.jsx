@@ -23,23 +23,26 @@ const Home = () => {
       });
   }, []);
 
-  // --- LÓGICA PARA CONSTRUIR LA URL CORRECTA DE LA IMAGEN ---
-  let imagenFondo = '/assets/pollopesado.jpg'; // Imagen por defecto
+  // --- LÓGICA DE IMAGEN POR DEFECTO (SALVAVIDAS) ---
+  // 1. Definimos la imagen por defecto que vive en tu carpeta public/assets
+  let imagenFondo = '/assets/pollopesado.jpg'; 
 
-  if (config.hero_image_url) {
+  // 2. Verificamos si la base de datos realmente nos mandó una URL válida
+  if (config.hero_image_url && config.hero_image_url.trim() !== '') {
       if (config.hero_image_url.startsWith('http')) {
-          // Si ya trae la URL completa, la usamos
+          // Si ya viene con https://garcar-api... la usamos tal cual
           imagenFondo = config.hero_image_url;
       } else {
-          // Si es un archivo local de Render (ej. /uploads/banner.jpg)
-          // Le pegamos la dirección de tu API pública
+          // Si por alguna razón solo viene la ruta corta, le pegamos el dominio
           imagenFondo = `https://garcar-api.onrender.com${config.hero_image_url}`;
       }
   }
 
-  // Estilo de fondo para el banner principal (Hero) DINÁMICO
+  // --- 3. ESTILO DE FONDO PARA EL BANNER PRINCIPAL (HERO) DINÁMICO ---
   const heroStyle = {
+    // Aplicamos la imagen seleccionada y ponemos un color oscuro de respaldo
     backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${imagenFondo}')`,
+    backgroundColor: '#2c3e50', // Color de respaldo mientras carga la imagen o si falla
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed', // Efecto Parallax (el fondo se queda quieto al hacer scroll)

@@ -25,8 +25,9 @@ const updatePrecio = async (req, res) => {
 const addProducto = async (req, res) => {
     // req.body trae los textos, req.file trae la imagen
     const { nombre, categoria, precio, unidad_medida, rango_peso, descripcion } = req.body;
-    // Si se subió una imagen, creamos la URL para guardarla en la base de datos
-    const imagen_url = req.file ? `http://localhost:3001/uploads/${req.file.filename}` : null;
+    
+    // Si se subió una imagen, creamos la URL con el dominio de Render para guardarla en la BD
+    const imagen_url = req.file ? `https://garcar-api.onrender.com/uploads/${req.file.filename}` : null;
 
     try {
         const [result] = await pool.query(
@@ -58,8 +59,8 @@ const editProducto = async (req, res) => {
     
     try {
         if (req.file) {
-            // Si subió una foto nueva, actualizamos todo incluida la imagen_url
-            const imagen_url = `http://localhost:3001/uploads/${req.file.filename}`;
+            // Si subió una foto nueva, actualizamos todo incluida la imagen_url con el dominio de Render
+            const imagen_url = `https://garcar-api.onrender.com/uploads/${req.file.filename}`;
             await pool.query(
                 `UPDATE productos SET nombre=?, categoria=?, precio=?, unidad_medida=?, rango_peso=?, descripcion=?, imagen_url=? WHERE id_producto=?`,
                 [nombre, categoria, precio, unidad_medida, rango_peso, descripcion, imagen_url, id]

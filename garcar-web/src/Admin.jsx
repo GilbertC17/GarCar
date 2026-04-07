@@ -179,6 +179,23 @@ const Admin = () => {
   const productosFiltrados = productos.filter(p => (categoriaAdmin === 'Todos' || p.categoria === categoriaAdmin) && p.nombre.toLowerCase().includes(busquedaAdmin.toLowerCase()));
 
   // ==========================================
+  // LÓGICA DE PREVISUALIZACIÓN DEL BANNER
+  // ==========================================
+  let imagenFondoPreview = '/assets/pollopesado.jpg'; // Imagen por defecto de respaldo
+
+  if (previewBanner) {
+      // Si seleccionaste una imagen nueva desde el input, mostramos esa
+      imagenFondoPreview = previewBanner;
+  } else if (configHome.hero_image_url && configHome.hero_image_url.trim() !== '') {
+      // Si no has seleccionado imagen nueva, verificamos si hay una guardada en la base de datos
+      if (configHome.hero_image_url.startsWith('http')) {
+          imagenFondoPreview = configHome.hero_image_url;
+      } else {
+          imagenFondoPreview = `https://garcar-api.onrender.com${configHome.hero_image_url}`;
+      }
+  }
+
+  // ==========================================
   // RENDER DE LA INTERFAZ
   // ==========================================
   return (
@@ -263,7 +280,7 @@ const Admin = () => {
               ))}
           </div>
           {/* VISTA ESCRITORIO (TABLA) */}
-          <div className="d-none d-lg-block card border-0 shadow-sm rounded-4 overflow-hidden"><table className="table table-hover align-middle mb-0 bg-white"><thead className="bg-dark text-white"><tr><th className="py-3 ps-4">Producto</th><th className="py-3" style={{ width: '180px' }}>Precio Rápido</th><th className="py-3 text-center">Estado</th><th className="py-3 text-end pe-4">Acciones</th></tr></thead><tbody>{productosFiltrados.map(p => (<tr key={p.id_producto} className={p.estado === 'Inactivo' ? 'table-light text-muted' : ''}><td className="ps-4"><div className="d-flex align-items-center"><img src={p.imagen_url || '/assets/logo-garcar.png'} width="50" height="50" className={`rounded-circle me-3 shadow-sm border ${p.estado === 'Inactivo' && 'opacity-50'}`} style={{ objectFit: 'cover' }} /><div><span className="fw-bold d-block text-dark">{p.nombre}</span><span className="badge bg-light text-secondary border px-2 py-0 mt-1">{p.categoria}</span></div></div></td><td><div className="input-group input-group-sm mb-1"><span className="input-group-text bg-light border-end-0">$</span><input type="number" className="form-control border-start-0 fw-bold text-danger" value={p.precio} onChange={(e) => manejarCambioInputProd(p.id_producto, e.target.value)} disabled={p.estado === 'Inactivo'}/></div><button className="btn btn-primary btn-sm w-100 fw-bold shadow-sm" style={{ fontSize: '0.7rem' }} onClick={() => guardarPrecio(p.id_producto, p.precio)} disabled={p.estado === 'Inactivo'}><i className="bi bi-check2-circle me-1"></i> Actualizar</button></td><td className="text-center"><span className={`badge border px-3 py-2 rounded-pill ${p.estado === 'Activo' ? 'bg-success' : p.estado === 'Agotado' ? 'bg-warning text-dark' : 'bg-secondary'}`}>{p.estado || 'Activo'}</span></td><td className="text-end pe-4"><div className="btn-group shadow-sm"><button className="btn btn-light btn-sm text-primary border" title="Editar" onClick={() => abrirFormularioEdicionProd(p)}><i className="bi bi-pencil-square"></i></button>{p.estado !== 'Inactivo' && (<button className={`btn btn-light btn-sm border ${p.estado === 'Activo' ? 'text-warning' : 'text-success'}`} title={p.estado === 'Activo' ? 'Marcar Agotado' : 'Marcar Activo'} onClick={() => cambiarEstado(p.id_producto, p.estado === 'Activo' ? 'Agotado' : 'Activo')}><i className={`bi ${p.estado === 'Activo' ? 'bi-pause-circle-fill' : 'bi-play-circle-fill'}`}></i></button>)}{p.estado !== 'Inactivo' ? (<button className="btn btn-light btn-sm text-danger border" title="Dar de baja" onClick={() => {if(window.confirm('¿Ocultar?')) cambiarEstado(p.id_producto, 'Inactivo')}}><i className="bi bi-trash3-fill"></i></button>) : (<button className="btn btn-light btn-sm text-success border" title="Restaurar" onClick={() => cambiarEstado(p.id_producto, 'Activo')}><i className="bi bi-arrow-counterclockwise"></i></button>)}</div></td></tr>))}</tbody></table></div>
+          <div className="d-none d-lg-block card border-0 shadow-sm rounded-4 overflow-hidden"><table className="table table-hover align-middle mb-0 bg-white"><thead className="bg-dark text-white"><tr><th className="py-3 ps-4">Producto</th><th className="py-3" style={{ width: '180px' }}>Precio Rápido</th><th className="py-3 text-center">Estado</th><th className="py-3 text-end pe-4">Acciones</th></tr></thead><tbody>{productosFiltrados.map(p => (<tr key={p.id_producto} className={p.estado === 'Inactivo' ? 'table-light text-muted' : ''}><td className="ps-4"><div className="d-flex align-items-center"><img alt="imagen" src={p.imagen_url || '/assets/logo-garcar.png'} width="50" height="50" className={`rounded-circle me-3 shadow-sm border ${p.estado === 'Inactivo' && 'opacity-50'}`} style={{ objectFit: 'cover' }} /><div><span className="fw-bold d-block text-dark">{p.nombre}</span><span className="badge bg-light text-secondary border px-2 py-0 mt-1">{p.categoria}</span></div></div></td><td><div className="input-group input-group-sm mb-1"><span className="input-group-text bg-light border-end-0">$</span><input type="number" className="form-control border-start-0 fw-bold text-danger" value={p.precio} onChange={(e) => manejarCambioInputProd(p.id_producto, e.target.value)} disabled={p.estado === 'Inactivo'}/></div><button className="btn btn-primary btn-sm w-100 fw-bold shadow-sm" style={{ fontSize: '0.7rem' }} onClick={() => guardarPrecio(p.id_producto, p.precio)} disabled={p.estado === 'Inactivo'}><i className="bi bi-check2-circle me-1"></i> Actualizar</button></td><td className="text-center"><span className={`badge border px-3 py-2 rounded-pill ${p.estado === 'Activo' ? 'bg-success' : p.estado === 'Agotado' ? 'bg-warning text-dark' : 'bg-secondary'}`}>{p.estado || 'Activo'}</span></td><td className="text-end pe-4"><div className="btn-group shadow-sm"><button className="btn btn-light btn-sm text-primary border" title="Editar" onClick={() => abrirFormularioEdicionProd(p)}><i className="bi bi-pencil-square"></i></button>{p.estado !== 'Inactivo' && (<button className={`btn btn-light btn-sm border ${p.estado === 'Activo' ? 'text-warning' : 'text-success'}`} title={p.estado === 'Activo' ? 'Marcar Agotado' : 'Marcar Activo'} onClick={() => cambiarEstado(p.id_producto, p.estado === 'Activo' ? 'Agotado' : 'Activo')}><i className={`bi ${p.estado === 'Activo' ? 'bi-pause-circle-fill' : 'bi-play-circle-fill'}`}></i></button>)}{p.estado !== 'Inactivo' ? (<button className="btn btn-light btn-sm text-danger border" title="Dar de baja" onClick={() => {if(window.confirm('¿Ocultar?')) cambiarEstado(p.id_producto, 'Inactivo')}}><i className="bi bi-trash3-fill"></i></button>) : (<button className="btn btn-light btn-sm text-success border" title="Restaurar" onClick={() => cambiarEstado(p.id_producto, 'Activo')}><i className="bi bi-arrow-counterclockwise"></i></button>)}</div></td></tr>))}</tbody></table></div>
         </div>
       )}
 
@@ -319,7 +336,7 @@ const Admin = () => {
               <label className="form-label fw-bold text-muted small text-uppercase">Previsualización del Banner</label>
               <div className="rounded-4 overflow-hidden shadow border" style={{ height: '180px', position: 'relative' }}>
                 <img 
-                  src={previewBanner || configHome.hero_image_url || '/assets/logo-garcar.png'} 
+                  src={imagenFondoPreview} 
                   alt="Previsualización Hero" 
                   className="w-100 h-100" 
                   style={{ objectFit: 'cover' }} 

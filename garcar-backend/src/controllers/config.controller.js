@@ -25,9 +25,9 @@ const updateHomeConfig = async (req, res) => {
         await pool.query('UPDATE configuracion SET valor = ? WHERE clave = ?', [hero_headline, 'hero_headline']);
         await pool.query('UPDATE configuracion SET valor = ? WHERE clave = ?', [hero_subheadline, 'hero_subheadline']);
 
-        // 2. Si se subió una nueva imagen, actualizamos la URL
+        // 2. Si se subió una nueva imagen, actualizamos la URL con el dominio de Render
         if (req.file) {
-            const newImageUrl = `http://localhost:3001/uploads/${req.file.filename}`;
+            const newImageUrl = `https://garcar-api.onrender.com/uploads/${req.file.filename}`;
             await pool.query('UPDATE configuracion SET valor = ? WHERE clave = ?', [newImageUrl, 'hero_image_url']);
         }
 
