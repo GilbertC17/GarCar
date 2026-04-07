@@ -10,7 +10,7 @@ const Home = () => {
 
   // --- 2. EFECTO PARA LEER DE LA BASE DE DATOS AL CARGAR ---
   useEffect(() => {
-    fetch('http://localhost:3001/api/config')
+    fetch('https://garcar-api.onrender.com/api/config')
       .then(res => res.json())
       .then(data => {
         // Si la base de datos nos devuelve datos, actualizamos el estado

@@ -37,14 +37,14 @@ const Admin = () => {
   }, [navigate]);
 
   const cargarProductos = () => {
-    fetch('http://localhost:3001/api/productos')
+    fetch('https://garcar-api.onrender.com/api/productos')
       .then(res => res.json())
       .then(data => setProductos(data))
       .catch(err => console.error(err));
   };
 
   const cargarConfiguracionHome = () => {
-    fetch('http://localhost:3001/api/config')
+    fetch('https://garcar-api.onrender.com/api/config')
       .then(res => res.json())
       .then(data => setConfigHome(data))
       .catch(err => console.error(err));
@@ -62,7 +62,7 @@ const Admin = () => {
   const guardarPrecio = (id, nuevoPrecio) => {
     const token = localStorage.getItem('token'); // Recuperamos la llave
 
-    fetch(`http://localhost:3001/api/productos/${id}`, { 
+    fetch(`https://garcar-api.onrender.com/api/productos/${id}`, { 
       method: 'PUT', 
       headers: { 
         'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ const Admin = () => {
   const cambiarEstado = async (id, nuevoEstado) => {
     const token = localStorage.getItem('token'); // Recuperamos la llave
     try { 
-      const response = await fetch(`http://localhost:3001/api/productos/${id}/estado`, { 
+      const response = await fetch(`https://garcar-api.onrender.com/api/productos/${id}/estado`, { 
         method: 'PUT', 
         headers: { 
           'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ const Admin = () => {
     Object.keys(formularioProd).forEach(key => formData.append(key, formularioProd[key])); 
     if (imagenProd) formData.append('imagen', imagenProd); 
     
-    const url = productoEditando ? `http://localhost:3001/api/productos/${productoEditando}/editar` : 'http://localhost:3001/api/productos';
+    const url = productoEditando ? `https://garcar-api.onrender.com/api/productos/${productoEditando}/editar` : 'https://garcar-api.onrender.com/api/productos';
     
     try { 
       const response = await fetch(url, { 
@@ -154,7 +154,7 @@ const Admin = () => {
     if (bannerFile) formData.append('banner', bannerFile);
 
     try {
-      const response = await fetch('http://localhost:3001/api/config/home', {
+      const response = await fetch('https://garcar-api.onrender.com/api/config/home', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}` // Mostramos la llave

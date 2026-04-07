@@ -12,7 +12,7 @@ const Catalogo = () => {
 
   // --- OBTENCIÓN DE DATOS ---
   useEffect(() => {
-    fetch('http://localhost:3001/api/productos')
+    fetch('https://garcar-api.onrender.com/api/productos')
       .then(response => response.json())
       .then(data => {
         setProductos(data);
