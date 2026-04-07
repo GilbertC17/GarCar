@@ -8,21 +8,23 @@ const productRoutes = require('./routes/products.routes');
 const authRoutes = require('./routes/auth.routes');
 const configRoutes = require('./routes/config.routes');
 const fs = require('fs');
-// Si la carpeta uploads no existe, la crea automáticamente
+
+// Si la carpeta uploads no existe, la crea automáticamente en la raíz
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
 
 const app = express();
 
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
-
 // --- MIDDLEWARES ---
-// CORS es vital para que React (puerto 3000) pueda hablar con Node (puerto 3001)
+// ¡CORS siempre va primero! Vital para que React pueda pedir las imágenes sin que lo bloqueen
 app.use(cors()); 
 
-// Permite que el servidor entienda los datos en formato JSON que enviamos desde el Frontend
+// Permite que el servidor entienda los datos en formato JSON
 app.use(express.json());
+
+// 🔓 LA LLAVE MÁGICA CORREGIDA: Apunta exactamente a la carpeta "uploads" de la raíz
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // --- REGISTRO DE RUTAS (API ENDPOINTS) ---
 // Rutas para productos (Catálogo y Admin)
