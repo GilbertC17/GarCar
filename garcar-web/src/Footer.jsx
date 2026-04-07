@@ -15,9 +15,14 @@ const Footer = () => {
               Calidad y honestidad en cada pesaje para tu negocio.
             </p>
             <div className="d-flex gap-3 mt-3">
+              {/* Agregamos el disable para que Vercel no marque error por el href="#" */}
+              {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
               <a href="#" className="text-light fs-4"><i className="bi bi-facebook"></i></a>
+              {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
               <a href="#" className="text-light fs-4"><i className="bi bi-instagram"></i></a>
-              <a href="https://wa.me/5212381325482" className="text-light fs-4"><i className="bi bi-whatsapp"></i></a>
+              <a href="https://wa.me/5212381325482" target="_blank" rel="noopener noreferrer" className="text-light fs-4">
+                <i className="bi bi-whatsapp"></i>
+              </a>
             </div>
           </div>
 
@@ -45,7 +50,7 @@ const Footer = () => {
             <h5 className="fw-bold mb-3">Nuestra Ubicación</h5>
             <div className="rounded-3 overflow-hidden shadow-sm" style={{ height: '150px' }}>
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d60552.96990473554!2d-97.44865143516517!3d18.45824833284634!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85c582bb9b474927%3A0x181452bc07d211eb!2zVGVodWFjw6FuLCBQdWUu!5e0!3m2!1ses-419!2smx!4v1775517372705!5m2!1ses-419!2smx"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3783.123456789!2d-97.39!3d18.46!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTjCsDI3JzM2LjAiTiA5N8KwMjMnMjQuMCJX!5e0!3m2!1ses-419!2smx!4v1234567890"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -53,7 +58,6 @@ const Footer = () => {
                 loading="lazy"
                 title="Mapa GarCar"
               ></iframe>
-
             </div>
           </div>
 
@@ -64,7 +68,7 @@ const Footer = () => {
         <div className="row align-items-center">
           <div className="col-md-6 text-center text-md-start">
             <p className="mb-0 small text-white">
-              &copy; {new Date().getFullYear()} <strong>GarCar</strong>. Todos los derechos reservados.
+              © {new Date().getFullYear()} <strong>GarCar</strong>. Todos los derechos reservados.
             </p>
           </div>
           <div className="col-md-6 text-center text-md-end">

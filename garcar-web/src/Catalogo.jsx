@@ -75,7 +75,7 @@ const Catalogo = () => {
       
       // Si escribiste "3.000 kg - 3.400 kg", extraemos los números para sacar el promedio exacto
       if (p.rango_peso) {
-        const numeros = p.rango_peso.match(/[\d\.]+/g); // Busca números en el texto
+        const numeros = p.rango_peso.match(/[\d.]+/g); // Busca números en el texto
         if (numeros && numeros.length >= 2) {
           pesoPromedio = (parseFloat(numeros[0]) + parseFloat(numeros[1])) / 2;
         } else if (numeros && numeros.length === 1) {

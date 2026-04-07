@@ -251,7 +251,7 @@ const Admin = () => {
                 <div key={p.id_producto} className={`card mb-3 border-0 shadow-sm rounded-4 ${p.estado === 'Inactivo' ? 'bg-light opacity-75' : ''}`}>
                   <div className="card-body p-3">
                     <div className="d-flex align-items-center mb-3">
-                        <img src={p.imagen_url || '/assets/logo-garcar.png'} width="50" height="50" className="rounded-circle me-3 border" style={{ objectFit: 'cover' }} />
+                        <img alt="imagen" src={p.imagen_url || '/assets/logo-garcar.png'} width="50" height="50" className="rounded-circle me-3 border" style={{ objectFit: 'cover' }} />
                         <div><span className="fw-bold d-block text-dark lh-sm">{p.nombre}</span><div className="mt-1 d-flex gap-2"><span className="badge bg-light text-secondary border">{p.categoria}</span><span className={`badge ${p.estado === 'Activo' ? 'bg-success' : p.estado === 'Agotado' ? 'bg-warning text-dark' : 'bg-secondary'}`}>{p.estado || 'Activo'}</span></div></div>
                     </div>
                     <div className="d-flex flex-column gap-2 border-top pt-3">

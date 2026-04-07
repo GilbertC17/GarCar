@@ -1,11 +1,10 @@
 import React from 'react';
 import { useCart } from './CartContext';
-import { useNavigate, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 const Cotizacion = () => {
   // Importamos la nueva función restarDelCarrito
   const { carrito, agregarAlCarrito, restarDelCarrito, eliminarDelCarrito, vaciarCarrito } = useCart();
-  const navigate = useNavigate();
 
   const enviarWhatsApp = () => {
     const numero = "5212381325482"; 
@@ -72,7 +71,7 @@ const Cotizacion = () => {
                     <tr key={item.id_producto}>
                       <td className="ps-4 py-3">
                         <div className="d-flex align-items-center">
-                          <img src={item.imagen_url || '/assets/logo-garcar.png'} width="50" height="50" className="rounded-3 me-3 border shadow-sm" style={{objectFit: 'cover'}} />
+                          <img src={item.imagen_url || '/assets/logo-garcar.png'} alt={item.nombre} width="50" height="50" className="rounded-3 me-3 border shadow-sm" style={{objectFit: 'cover'}} />
                           <div>
                             <span className="fw-bold d-block text-dark">{item.nombre}</span>
                             <small className="text-muted">{item.unidad_medida}</small>
