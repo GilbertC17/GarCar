@@ -23,18 +23,23 @@ const Home = () => {
       });
   }, []);
 
-  // --- LÓGICA DE IMAGEN POR DEFECTO (SALVAVIDAS) ---
-  // 1. Definimos la imagen por defecto que vive en tu carpeta public/assets
-  let imagenFondo = '/assets/pollopesado.jpg'; 
+  // --- LÓGICA DE IMAGEN POR DEFECTO (SALVAVIDAS Y ATRAPA-FANTASMAS) ---
+  let imagenFondo = '/assets/pollopesado.jpg'; // Imagen por defecto
 
-  // 2. Verificamos si la base de datos realmente nos mandó una URL válida
   if (config.hero_image_url && config.hero_image_url.trim() !== '') {
-      if (config.hero_image_url.startsWith('http')) {
+      let urlLimpia = config.hero_image_url;
+      
+      // ¡ATRAPA-FANTASMAS! Si la BD manda un localhost viejo, lo reescribimos a la fuerza
+      if (urlLimpia.includes('localhost')) {
+          urlLimpia = urlLimpia.replace('http://localhost:3001', 'https://garcar-api.onrender.com');
+      }
+
+      if (urlLimpia.startsWith('http')) {
           // Si ya viene con https://garcar-api... la usamos tal cual
-          imagenFondo = config.hero_image_url;
+          imagenFondo = urlLimpia;
       } else {
           // Si por alguna razón solo viene la ruta corta, le pegamos el dominio
-          imagenFondo = `https://garcar-api.onrender.com${config.hero_image_url}`;
+          imagenFondo = `https://garcar-api.onrender.com${urlLimpia}`;
       }
   }
 

@@ -2,15 +2,22 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs'); // Importamos 'fs' para manejar carpetas
 const { getProductos, updatePrecio, addProducto, updateEstado, editProducto } = require('../controllers/products.controller');
 
 // --- 1. IMPORTAMOS EL MIDDLEWARE DE SEGURIDAD (EL CADENERO) ---
 const verifyToken = require('../middlewares/auth.middleware');
 
+// --- 2. GARANTIZAMOS QUE LA CARPETA EXISTA EN RENDER ---
+const uploadDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 // --- Configuración de Multer (Dónde y cómo guardar el archivo) ---
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../../public/uploads')); 
+        cb(null, uploadDir); 
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + path.extname(file.originalname)); 
