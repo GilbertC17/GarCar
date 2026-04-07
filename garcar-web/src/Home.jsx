@@ -5,7 +5,7 @@ const Home = () => {
   const [config, setConfig] = useState({
     hero_headline: 'Frescura, Calidad y Mejor Precio',
     hero_subheadline: 'Abastecemos tu negocio con pollo vivo de alto rendimiento y huevo fresco seleccionado. ¡Garantizamos el mejor costo del mercado!',
-    hero_image_url: '' // Usará el de por defecto si está vacío
+    hero_image_url: '' 
   });
 
   // --- 2. EFECTO PARA LEER DE LA BASE DE DATOS AL CARGAR ---
@@ -23,10 +23,23 @@ const Home = () => {
       });
   }, []);
 
+  // --- LÓGICA PARA CONSTRUIR LA URL CORRECTA DE LA IMAGEN ---
+  let imagenFondo = '/assets/pollopesado.jpg'; // Imagen por defecto
+
+  if (config.hero_image_url) {
+      if (config.hero_image_url.startsWith('http')) {
+          // Si ya trae la URL completa, la usamos
+          imagenFondo = config.hero_image_url;
+      } else {
+          // Si es un archivo local de Render (ej. /uploads/banner.jpg)
+          // Le pegamos la dirección de tu API pública
+          imagenFondo = `https://garcar-api.onrender.com${config.hero_image_url}`;
+      }
+  }
+
   // Estilo de fondo para el banner principal (Hero) DINÁMICO
   const heroStyle = {
-    // Aquí inyectamos la imagen de la base de datos, si no hay, usa pollopesado.jpg
-    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${config.hero_image_url || '/assets/pollopesado.jpg'}')`,
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('${imagenFondo}')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundAttachment: 'fixed', // Efecto Parallax (el fondo se queda quieto al hacer scroll)
@@ -36,7 +49,6 @@ const Home = () => {
 
   return (
     <div className="d-flex flex-column min-vh-100 position-relative" style={{ backgroundColor: '#fcfcfc' }}>
-
 
       <main className="flex-grow-1">
 
@@ -81,7 +93,7 @@ const Home = () => {
                 Nuestro compromiso es con la frescura y la honestidad en el pesaje. Trabajamos incansablemente para asegurar que recibas productos de primera, con rutas de entrega optimizadas para que tu inventario nunca falte.
               </p>
               
-              {/* Sello de Confianza Integrado (Usando tu ruta .png) */}
+              {/* Sello de Confianza Integrado */}
               <div className="d-flex align-items-center bg-white p-3 rounded-3 shadow-sm border">
                 <img 
                   src="/assets/respaldo-san-antonio.png" 
@@ -183,7 +195,6 @@ const Home = () => {
         </section>
 
       </main>
-
 
       {/* BOTÓN FLOTANTE DE WHATSAPP */}
       <a 

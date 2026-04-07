@@ -7,6 +7,11 @@ require('dotenv').config();
 const productRoutes = require('./routes/products.routes');
 const authRoutes = require('./routes/auth.routes');
 const configRoutes = require('./routes/config.routes');
+const fs = require('fs');
+// Si la carpeta uploads no existe, la crea automáticamente
+if (!fs.existsSync('./uploads')) {
+    fs.mkdirSync('./uploads');
+}
 
 const app = express();
 
