@@ -11,30 +11,30 @@ const Catalogo = () => {
   const { agregarAlCarrito } = useCart();
 
   // --- OBTENCIÓN DE DATOS ---
-useEffect(() => {
+  useEffect(() => {
     fetch('https://garcar-api.onrender.com/api/productos')
       .then(res => {
-          if (!res.ok) throw new Error('Error en el servidor BD');
+          if (!res.ok) throw new Error('El servidor reportó un problema');
           return res.json();
       })
       .then(data => {
+          // Verificamos estrictamente que la base de datos nos mandó una lista (Array)
           if (Array.isArray(data)) {
-              setProductos([...productosBase, ...data]);
+              setProductos(data); 
           } else {
-              setProductos([...productosBase]);
+              setProductos([]); 
           }
       })
       .catch(err => {
-          console.error("No se pudo conectar a la BD, cargando catálogo base:", err);
-          setProductos([...productosBase]); 
+          console.error("Error al cargar los productos:", err);
+          setProductos([]); 
       })
       .finally(() => {
-          // ¡LA PIEZA FALTANTE! 
-          // Se ejecuta siempre al final (haya éxito o error) y quita el mensaje de carga
+          // ¡ESTO QUITA LA PANTALLA DE CARGA (SPINNER) SIEMPRE!
           setCargando(false); 
-          // OJO: Si tu variable de estado se llama "loading" o "setLoading", cámbialo aquí.
       });
   }, []);
+
   // --- LÓGICA DE FILTRADO ---
   const productosFiltrados = productos.filter(p => {
     if (p.estado === 'Inactivo') return false;
@@ -46,7 +46,7 @@ useEffect(() => {
 
   const categorias = ['Todos', 'Pollo', 'Huevo'];
 
-  // --- LÓGICA INTELIGENTE DE PRECIOS (NUEVO) ---
+  // --- LÓGICA INTELIGENTE DE PRECIOS ORIGINAL ---
   const renderDesglosePrecios = (p) => {
     if (!p.precio || p.precio <= 0) return null; // Si no hay precio, no mostramos cálculo
 
@@ -82,11 +82,10 @@ useEffect(() => {
 
     // 2. CÁLCULOS PARA POLLO
     if (esPollo) {
-      let pesoPromedio = 3.2; // Peso por defecto si no escribes nada
+      let pesoPromedio = 3.2; // Peso por defecto
       
-      // Si escribiste "3.000 kg - 3.400 kg", extraemos los números para sacar el promedio exacto
       if (p.rango_peso) {
-        const numeros = p.rango_peso.match(/[\d.]+/g); // Busca números en el texto
+        const numeros = p.rango_peso.match(/[\d.]+/g); 
         if (numeros && numeros.length >= 2) {
           pesoPromedio = (parseFloat(numeros[0]) + parseFloat(numeros[1])) / 2;
         } else if (numeros && numeros.length === 1) {
@@ -95,7 +94,6 @@ useEffect(() => {
       }
 
       let precioPieza, precioKg;
-      // Heurística: Si el precio es mayor a 50 pesos, asumimos que lo diste por Pieza. Si es menor, por Kilo.
       if (p.precio > 50 || p.unidad_medida === 'Pieza') {
         precioPieza = parseFloat(p.precio);
         precioKg = precioPieza / pesoPromedio;
@@ -178,61 +176,66 @@ useEffect(() => {
         ) : (
           <div className="row g-4">
             {productosFiltrados.length > 0 ? (
-              productosFiltrados.map((producto) => (
-                <div className="col-12 col-sm-6 col-lg-3" key={producto.id_producto}>
-                  <div className={`card h-100 border-0 shadow-hover rounded-4 overflow-hidden transition-all bg-white border-bottom border-4 ${producto.estado === 'Agotado' ? 'border-secondary' : 'border-transparent hover-border-danger'}`}>
-                    
-                    {/* IMAGEN Y ETIQUETAS */}
-                    <div style={{ height: '220px', position: 'relative' }}>
-                      <img src={producto.imagen_url || '/assets/logo-garcar.png'} alt={producto.nombre} 
-                        className={`w-100 h-100 ${producto.estado === 'Agotado' ? 'opacity-50' : ''}`} style={{ objectFit: 'cover' }} />
+              productosFiltrados.map((producto) => {
+                // Filtro Atrapa-Fantasmas para imágenes de la BD
+                let imgProd = producto.imagen_url ? producto.imagen_url.replace('http://localhost:3001', 'https://garcar-api.onrender.com') : '/assets/logo-garcar.png';
+
+                return (
+                  <div className="col-12 col-sm-6 col-lg-3" key={producto.id_producto}>
+                    <div className={`card h-100 border-0 shadow-hover rounded-4 overflow-hidden transition-all bg-white border-bottom border-4 ${producto.estado === 'Agotado' ? 'border-secondary' : 'border-transparent hover-border-danger'}`}>
                       
-                      {producto.estado === 'Agotado' && (
-                        <span className="badge bg-dark position-absolute top-50 start-50 translate-middle py-2 px-4 shadow rounded-pill fs-6" style={{ letterSpacing: '2px' }}>
-                          AGOTADO
-                        </span>
-                      )}
-                    </div>
-
-                    {/* CONTENIDO DE LA TARJETA */}
-                    <div className="card-body d-flex flex-column p-4">
-                      <div className="mb-2 d-flex justify-content-between align-items-center">
-                        <span className="badge bg-light text-muted border text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>
-                          {producto.categoria}
-                        </span>
-                        <small className={producto.estado === 'Agotado' ? 'text-muted fw-bold' : 'text-success fw-bold'} style={{ fontSize: '0.7rem' }}>
-                          {producto.estado === 'Agotado' ? <><i className="bi bi-dash-circle-fill me-1"></i> Sin stock</> : <><i className="bi bi-check-circle-fill me-1"></i> Disponible</>}
-                        </small>
-                      </div>
-                      
-                      <h5 className={`card-title fw-bold mb-1 ${producto.estado === 'Agotado' ? 'text-muted' : 'text-dark'}`}>
-                        {producto.nombre}
-                      </h5>
-
-                      <p className="card-text text-secondary small mb-0 flex-grow-1">
-                        {producto.descripcion}
-                      </p>
-
-                      {/* --- AQUÍ SE INYECTA EL CÁLCULO DE PRECIOS AUTOMÁTICO --- */}
-                      {renderDesglosePrecios(producto)}
-
-                      {/* BOTÓN AÑADIR (Manteniéndolo al fondo siempre alineado) */}
-                      <div className={!producto.rango_peso || !producto.categoria.toLowerCase().includes('pollo') ? 'mt-auto' : ''}>
-                        {producto.estado === 'Agotado' ? (
-                          <button className="btn btn-secondary w-100 fw-bold py-2 shadow-sm rounded-pill" disabled>
-                            <i className="bi bi-x-circle me-2"></i> Agotado
-                          </button>
-                        ) : (
-                          <button className="btn btn-success w-100 fw-bold py-2 shadow-sm rounded-pill" onClick={() => agregarAlCarrito(producto)}>
-                            <i className="bi bi-cart-plus me-2"></i> Añadir a Cotización
-                          </button>
+                      {/* IMAGEN Y ETIQUETAS */}
+                      <div style={{ height: '220px', position: 'relative' }}>
+                        <img src={imgProd} alt={producto.nombre} 
+                          className={`w-100 h-100 ${producto.estado === 'Agotado' ? 'opacity-50' : ''}`} style={{ objectFit: 'cover' }} />
+                        
+                        {producto.estado === 'Agotado' && (
+                          <span className="badge bg-dark position-absolute top-50 start-50 translate-middle py-2 px-4 shadow rounded-pill fs-6" style={{ letterSpacing: '2px' }}>
+                            AGOTADO
+                          </span>
                         )}
                       </div>
-                      
+
+                      {/* CONTENIDO DE LA TARJETA */}
+                      <div className="card-body d-flex flex-column p-4">
+                        <div className="mb-2 d-flex justify-content-between align-items-center">
+                          <span className="badge bg-light text-muted border text-uppercase fw-bold" style={{ fontSize: '0.65rem' }}>
+                            {producto.categoria}
+                          </span>
+                          <small className={producto.estado === 'Agotado' ? 'text-muted fw-bold' : 'text-success fw-bold'} style={{ fontSize: '0.7rem' }}>
+                            {producto.estado === 'Agotado' ? <><i className="bi bi-dash-circle-fill me-1"></i> Sin stock</> : <><i className="bi bi-check-circle-fill me-1"></i> Disponible</>}
+                          </small>
+                        </div>
+                        
+                        <h5 className={`card-title fw-bold mb-1 ${producto.estado === 'Agotado' ? 'text-muted' : 'text-dark'}`}>
+                          {producto.nombre}
+                        </h5>
+
+                        <p className="card-text text-secondary small mb-0 flex-grow-1">
+                          {producto.descripcion}
+                        </p>
+
+                        {/* --- AQUÍ SE INYECTA EL CÁLCULO DE PRECIOS AUTOMÁTICO --- */}
+                        {renderDesglosePrecios(producto)}
+
+                        {/* BOTÓN AÑADIR */}
+                        <div className={!producto.rango_peso || !producto.categoria.toLowerCase().includes('pollo') ? 'mt-auto' : ''}>
+                          {producto.estado === 'Agotado' ? (
+                            <button className="btn btn-secondary w-100 fw-bold py-2 shadow-sm rounded-pill" disabled>
+                              <i className="bi bi-x-circle me-2"></i> Agotado
+                            </button>
+                          ) : (
+                            <button className="btn btn-success w-100 fw-bold py-2 shadow-sm rounded-pill" onClick={() => agregarAlCarrito(producto)}>
+                              <i className="bi bi-cart-plus me-2"></i> Añadir a Cotización
+                            </button>
+                          )}
+                        </div>
+                        
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="col-12 text-center py-5">
                 <div className="display-1 text-muted opacity-25 mb-3">🥚</div>
