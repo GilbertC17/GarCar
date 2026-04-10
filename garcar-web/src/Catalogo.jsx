@@ -11,19 +11,25 @@ const Catalogo = () => {
   const { agregarAlCarrito } = useCart();
 
   // --- OBTENCIÓN DE DATOS ---
-  useEffect(() => {
+useEffect(() => {
     fetch('https://garcar-api.onrender.com/api/productos')
-      .then(response => response.json())
-      .then(data => {
-        setProductos(data);
-        setCargando(false);
+      .then(res => {
+          if (!res.ok) throw new Error('El servidor reportó un problema');
+          return res.json();
       })
-      .catch(error => {
-        console.error('Error al cargar productos:', error);
-        setCargando(false);
+      .then(data => {
+          // Verificamos estrictamente que la base de datos nos mandó una lista (Array)
+          if (Array.isArray(data)) {
+              setProductos(data); // Si todo está bien, guardamos los productos
+          } else {
+              setProductos([]); // Si mandó basura o un error, guardamos una lista vacía
+          }
+      })
+      .catch(err => {
+          console.error("Error al cargar los productos:", err);
+          setProductos([]); // Si se cae el internet o el servidor, no explotamos, solo listamos vacío
       });
   }, []);
-
   // --- LÓGICA DE FILTRADO ---
   const productosFiltrados = productos.filter(p => {
     if (p.estado === 'Inactivo') return false;
