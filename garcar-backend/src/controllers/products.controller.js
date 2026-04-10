@@ -9,7 +9,6 @@ const getProductos = async (req, res) => {
     }
 };
 
-// Actualizar precio de un producto
 const updatePrecio = async (req, res) => {
     const { id } = req.params;
     const { precio } = req.body;
@@ -21,19 +20,19 @@ const updatePrecio = async (req, res) => {
     }
 };
 
-// Función para añadir un nuevo producto con imagen
 const addProducto = async (req, res) => {
-    // req.body trae los textos, req.file trae la imagen
-    const { nombre, categoria, precio, unidad_medida, rango_peso, descripcion } = req.body;
-    
-    // Si se subió una imagen, creamos la URL con el dominio de Render para guardarla en la BD
+    const { nombre, categoria, precio, unidad_medida, rango_peso, descripcion, precio_menudeo, precio_mayoreo, rango_menudeo, rango_mayoreo } = req.body;
     const imagen_url = req.file ? `https://garcar-api.onrender.com/uploads/${req.file.filename}` : null;
+
+    // Convertimos textos vacíos a null para que MySQL no marque error
+    const pMen = precio_menudeo === '' ? null : precio_menudeo;
+    const pMay = precio_mayoreo === '' ? null : precio_mayoreo;
 
     try {
         const [result] = await pool.query(
-            `INSERT INTO productos (nombre, categoria, precio, unidad_medida, rango_peso, descripcion, imagen_url) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [nombre, categoria, precio, unidad_medida, rango_peso, descripcion, imagen_url]
+            `INSERT INTO productos (nombre, categoria, precio, unidad_medida, rango_peso, descripcion, imagen_url, precio_menudeo, precio_mayoreo, rango_menudeo, rango_mayoreo) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [nombre, categoria, precio, unidad_medida, rango_peso, descripcion, imagen_url, pMen, pMay, rango_menudeo || null, rango_mayoreo || null]
         );
         res.json({ message: 'Producto agregado exitosamente', id: result.insertId });
     } catch (error) {
@@ -55,25 +54,27 @@ const updateEstado = async (req, res) => {
 
 const editProducto = async (req, res) => {
     const { id } = req.params;
-    const { nombre, categoria, precio, unidad_medida, rango_peso, descripcion } = req.body;
+    const { nombre, categoria, precio, unidad_medida, rango_peso, descripcion, precio_menudeo, precio_mayoreo, rango_menudeo, rango_mayoreo } = req.body;
     
+    const pMen = precio_menudeo === '' ? null : precio_menudeo;
+    const pMay = precio_mayoreo === '' ? null : precio_mayoreo;
+
     try {
         if (req.file) {
-            // Si subió una foto nueva, actualizamos todo incluida la imagen_url con el dominio de Render
             const imagen_url = `https://garcar-api.onrender.com/uploads/${req.file.filename}`;
             await pool.query(
-                `UPDATE productos SET nombre=?, categoria=?, precio=?, unidad_medida=?, rango_peso=?, descripcion=?, imagen_url=? WHERE id_producto=?`,
-                [nombre, categoria, precio, unidad_medida, rango_peso, descripcion, imagen_url, id]
+                `UPDATE productos SET nombre=?, categoria=?, precio=?, unidad_medida=?, rango_peso=?, descripcion=?, imagen_url=?, precio_menudeo=?, precio_mayoreo=?, rango_menudeo=?, rango_mayoreo=? WHERE id_producto=?`,
+                [nombre, categoria, precio, unidad_medida, rango_peso, descripcion, imagen_url, pMen, pMay, rango_menudeo || null, rango_mayoreo || null, id]
             );
         } else {
-            // Si NO subió foto, actualizamos todo menos la imagen
             await pool.query(
-                `UPDATE productos SET nombre=?, categoria=?, precio=?, unidad_medida=?, rango_peso=?, descripcion=? WHERE id_producto=?`,
-                [nombre, categoria, precio, unidad_medida, rango_peso, descripcion, id]
+                `UPDATE productos SET nombre=?, categoria=?, precio=?, unidad_medida=?, rango_peso=?, descripcion=?, precio_menudeo=?, precio_mayoreo=?, rango_menudeo=?, rango_mayoreo=? WHERE id_producto=?`,
+                [nombre, categoria, precio, unidad_medida, rango_peso, descripcion, pMen, pMay, rango_menudeo || null, rango_mayoreo || null, id]
             );
         }
         res.json({ message: 'Producto actualizado' });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Error al actualizar producto' });
     }
 };

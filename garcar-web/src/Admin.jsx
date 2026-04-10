@@ -10,8 +10,11 @@ const Admin = () => {
   const [productoEditando, setProductoEditando] = useState(null); 
   const [busquedaAdmin, setBusquedaAdmin] = useState('');
   const [categoriaAdmin, setCategoriaAdmin] = useState('Todos');
+  
+  // AÑADIDOS LOS NUEVOS CAMPOS AL ESTADO INICIAL
   const [formularioProd, setFormularioProd] = useState({
-    nombre: '', categoria: '', precio: '', unidad_medida: 'Caja', rango_peso: '', descripcion: ''
+    nombre: '', categoria: '', precio: '', unidad_medida: 'Caja', rango_peso: '', descripcion: '',
+    precio_menudeo: '', precio_mayoreo: '', rango_menudeo: '', rango_mayoreo: ''
   });
   const [imagenProd, setImagenProd] = useState(null);
 
@@ -101,8 +104,25 @@ const Admin = () => {
     catch (error) { mostrarMensaje('Acceso denegado o error de red ❌', 'danger'); }
   };
 
-  const abrirFormularioNuevoProd = () => { setFormularioProd({ nombre: '', categoria: '', precio: '', unidad_medida: 'Caja', rango_peso: '', descripcion: '' }); setProductoEditando(null); setImagenProd(null); setVistaProductos('formulario'); };
-  const abrirFormularioEdicionProd = (prod) => { setFormularioProd({ nombre: prod.nombre, categoria: prod.categoria, precio: prod.precio, unidad_medida: prod.unidad_medida, rango_peso: prod.rango_peso || '', descripcion: prod.descripcion || '' }); setProductoEditando(prod.id_producto); setImagenProd(null); setVistaProductos('formulario'); };
+  // ACTUALIZADA PARA LIMPIAR LOS NUEVOS CAMPOS
+  const abrirFormularioNuevoProd = () => { 
+    setFormularioProd({ 
+      nombre: '', categoria: '', precio: '', unidad_medida: 'Caja', rango_peso: '', descripcion: '',
+      precio_menudeo: '', precio_mayoreo: '', rango_menudeo: '', rango_mayoreo: ''
+    }); 
+    setProductoEditando(null); setImagenProd(null); setVistaProductos('formulario'); 
+  };
+
+  // ACTUALIZADA PARA CARGAR LOS NUEVOS CAMPOS DESDE LA BD
+  const abrirFormularioEdicionProd = (prod) => { 
+    setFormularioProd({ 
+      nombre: prod.nombre, categoria: prod.categoria, precio: prod.precio, 
+      unidad_medida: prod.unidad_medida, rango_peso: prod.rango_peso || '', descripcion: prod.descripcion || '',
+      precio_menudeo: prod.precio_menudeo || '', precio_mayoreo: prod.precio_mayoreo || '', 
+      rango_menudeo: prod.rango_menudeo || '', rango_mayoreo: prod.rango_mayoreo || ''
+    }); 
+    setProductoEditando(prod.id_producto); setImagenProd(null); setVistaProductos('formulario'); 
+  };
   
   const handleGuardarProducto = async (e) => {
     e.preventDefault(); 
@@ -242,7 +262,7 @@ const Admin = () => {
         </div>
       )}
 
-      {/* SECCIÓN: GESTIÓN PRODUCTOS */}
+      {/* SECCIÓN: GESTIÓN PRODUCTOS - LISTA */}
       {seccion === 'productos' && vistaProductos === 'lista' && (
          <div className="animate__animated animate__fadeIn">
           {/* BARRA HERRAMIENTAS */}
@@ -269,9 +289,7 @@ const Admin = () => {
           {/* VISTA MÓVIL (TARJETAS) */}
           <div className="d-block d-lg-none">
             {productosFiltrados.map(p => {
-                // Filtro para imágenes de productos viejos
                 let imgProd = p.imagen_url ? p.imagen_url.replace('http://localhost:3001', 'https://garcar-api.onrender.com') : '/assets/logo-garcar.png';
-                
                 return (
                 <div key={p.id_producto} className={`card mb-3 border-0 shadow-sm rounded-4 ${p.estado === 'Inactivo' ? 'bg-light opacity-75' : ''}`}>
                   <div className="card-body p-3">
@@ -333,7 +351,89 @@ const Admin = () => {
 
       {/* SECCIÓN PRODUCTOS: FORMULARIO */}
       {seccion === 'productos' && vistaProductos === 'formulario' && (
-        <div className="card border-0 shadow-sm rounded-4 p-4 animate__animated animate__fadeIn"><div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2"><h4 className="fw-bold text-dark mb-0">{productoEditando ? 'Editar Producto' : 'Registrar Nuevo Producto'}</h4><button className="btn btn-sm btn-outline-secondary rounded-pill px-3" onClick={() => setVistaProductos('lista')}>Cancelar</button></div><form className="row g-4" onSubmit={handleGuardarProducto}><div className="col-md-6"><label className="form-label fw-bold text-dark">Nombre del Producto</label><input type="text" className="form-control bg-light border-0 shadow-sm" required value={formularioProd.nombre} onChange={e => setFormularioProd({...formularioProd, nombre: e.target.value})} /></div><div className="col-md-6"><label className="form-label fw-bold text-dark">Categoría</label><select className="form-select bg-light border-0 shadow-sm" required value={formularioProd.categoria} onChange={e => setFormularioProd({...formularioProd, categoria: e.target.value})}><option value="">Selecciona...</option><option value="Huevo">Huevo</option><option value="Pollo">Pollo</option><option value="Huevo Especial">Huevo Especial</option><option value="Huevo Económico">Huevo Económico</option></select></div><div className="col-md-4"><label className="form-label fw-bold text-dark">Precio Base ($)</label><input type="number" className="form-control bg-light border-0 shadow-sm" required value={formularioProd.precio} onChange={e => setFormularioProd({...formularioProd, precio: e.target.value})} /></div><div className="col-md-4"><label className="form-label fw-bold text-dark">Unidad de Medida</label><select className="form-select bg-light border-0 shadow-sm" value={formularioProd.unidad_medida} onChange={e => setFormularioProd({...formularioProd, unidad_medida: e.target.value})}><option value="Caja">Caja (360 pzas)</option><option value="Pieza/Kg">Pieza / Kg</option><option value="Cono">Cono (30 pzas)</option></select></div><div className="col-md-4"><label className="form-label fw-bold text-dark">Rango de Peso</label><input type="text" className="form-control bg-light border-0 shadow-sm" value={formularioProd.rango_peso} onChange={e => setFormularioProd({...formularioProd, rango_peso: e.target.value})} /></div><div className="col-12"><label className="form-label fw-bold text-dark">Imagen {productoEditando && '(Opcional)'}</label><input type="file" className="form-control bg-light border-0 shadow-sm" accept="image/*" onChange={e => setImagenProd(e.target.files[0])} required={!productoEditando} /></div><div className="col-12"><label className="form-label fw-bold text-dark">Descripción</label><textarea className="form-control bg-light border-0 shadow-sm" rows="2" value={formularioProd.descripcion} onChange={e => setFormularioProd({...formularioProd, descripcion: e.target.value})} /></div><div className="col-12 text-end mt-4 pt-3 border-top"><button type="submit" className="btn btn-danger px-5 py-2 fw-bold rounded-pill shadow-sm"><i className="bi bi-save2-fill me-2"></i> {productoEditando ? 'Guardar Cambios' : 'Añadir Producto'}</button></div></form></div>
+        <div className="card border-0 shadow-sm rounded-4 p-4 animate__animated animate__fadeIn">
+          
+          <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <h4 className="fw-bold text-dark mb-0">{productoEditando ? 'Editar Producto' : 'Registrar Nuevo Producto'}</h4>
+            <button className="btn btn-sm btn-outline-secondary rounded-pill px-3" onClick={() => setVistaProductos('lista')}>Cancelar</button>
+          </div>
+          
+          <form className="row g-4" onSubmit={handleGuardarProducto}>
+            <div className="col-md-6">
+              <label className="form-label fw-bold text-dark">Nombre del Producto</label>
+              <input type="text" className="form-control bg-light border-0 shadow-sm" required value={formularioProd.nombre} onChange={e => setFormularioProd({...formularioProd, nombre: e.target.value})} />
+            </div>
+            
+            <div className="col-md-6">
+              <label className="form-label fw-bold text-dark">Categoría</label>
+              <select className="form-select bg-light border-0 shadow-sm" required value={formularioProd.categoria} onChange={e => setFormularioProd({...formularioProd, categoria: e.target.value})}>
+                <option value="">Selecciona...</option>
+                <option value="Huevo">Huevo</option>
+                <option value="Pollo">Pollo</option>
+                <option value="Huevo Especial">Huevo Especial</option>
+                <option value="Huevo Económico">Huevo Económico</option>
+              </select>
+            </div>
+            
+            <div className="col-md-4">
+              <label className="form-label fw-bold text-dark">Precio Base ($)</label>
+              <input type="number" className="form-control bg-light border-0 shadow-sm" required value={formularioProd.precio} onChange={e => setFormularioProd({...formularioProd, precio: e.target.value})} />
+            </div>
+            
+            <div className="col-md-4">
+              <label className="form-label fw-bold text-dark">Unidad de Medida</label>
+              <select className="form-select bg-light border-0 shadow-sm" value={formularioProd.unidad_medida} onChange={e => setFormularioProd({...formularioProd, unidad_medida: e.target.value})}>
+                <option value="Caja">Caja (360 pzas)</option>
+                <option value="Pieza/Kg">Pieza / Kg</option>
+                <option value="Cono">Cono (30 pzas)</option>
+              </select>
+            </div>
+            
+            <div className="col-md-4">
+              <label className="form-label fw-bold text-dark">Rango de Peso</label>
+              <input type="text" className="form-control bg-light border-0 shadow-sm" value={formularioProd.rango_peso} onChange={e => setFormularioProd({...formularioProd, rango_peso: e.target.value})} />
+            </div>
+            
+            <div className="col-12">
+              <label className="form-label fw-bold text-dark">Imagen {productoEditando && '(Opcional)'}</label>
+              <input type="file" className="form-control bg-light border-0 shadow-sm" accept="image/*" onChange={e => setImagenProd(e.target.files[0])} required={!productoEditando} />
+            </div>
+            
+            <div className="col-12">
+              <label className="form-label fw-bold text-dark">Descripción</label>
+              <textarea className="form-control bg-light border-0 shadow-sm" rows="2" value={formularioProd.descripcion} onChange={e => setFormularioProd({...formularioProd, descripcion: e.target.value})} />
+            </div>
+
+            {/* --- SECCIÓN DE PRECIOS ESPECIALES (MAYOREO / MENUDEO) --- */}
+            <div className="col-12 mt-3 pt-3 border-top">
+              <h6 className="fw-bold text-secondary mb-3"><i className="bi bi-tags-fill me-2"></i>Precios de Mayoreo y Menudeo (Opcional)</h6>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label small text-muted fw-bold">Precio Menudeo ($)</label>
+                  <input type="number" className="form-control bg-light border-0 shadow-sm" value={formularioProd.precio_menudeo} onChange={e => setFormularioProd({...formularioProd, precio_menudeo: e.target.value})} />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label small text-muted fw-bold">Rango Menudeo (ej: 1 a 99 cajas)</label>
+                  <input type="text" className="form-control bg-light border-0 shadow-sm" value={formularioProd.rango_menudeo} onChange={e => setFormularioProd({...formularioProd, rango_menudeo: e.target.value})} />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label small text-muted fw-bold">Precio Mayoreo ($)</label>
+                  <input type="number" className="form-control bg-light border-0 shadow-sm" value={formularioProd.precio_mayoreo} onChange={e => setFormularioProd({...formularioProd, precio_mayoreo: e.target.value})} />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label small text-muted fw-bold">Rango Mayoreo (ej: 100 cajas en adelante)</label>
+                  <input type="text" className="form-control bg-light border-0 shadow-sm" value={formularioProd.rango_mayoreo} onChange={e => setFormularioProd({...formularioProd, rango_mayoreo: e.target.value})} />
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12 text-end mt-4 pt-3 border-top">
+              <button type="submit" className="btn btn-danger px-5 py-2 fw-bold rounded-pill shadow-sm">
+                <i className="bi bi-save2-fill me-2"></i> {productoEditando ? 'Guardar Cambios' : 'Añadir Producto'}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
 
