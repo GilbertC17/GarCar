@@ -14,20 +14,25 @@ const Catalogo = () => {
 useEffect(() => {
     fetch('https://garcar-api.onrender.com/api/productos')
       .then(res => {
-          if (!res.ok) throw new Error('El servidor reportó un problema');
+          if (!res.ok) throw new Error('Error en el servidor BD');
           return res.json();
       })
       .then(data => {
-          // Verificamos estrictamente que la base de datos nos mandó una lista (Array)
           if (Array.isArray(data)) {
-              setProductos(data); // Si todo está bien, guardamos los productos
+              setProductos([...productosBase, ...data]);
           } else {
-              setProductos([]); // Si mandó basura o un error, guardamos una lista vacía
+              setProductos([...productosBase]);
           }
       })
       .catch(err => {
-          console.error("Error al cargar los productos:", err);
-          setProductos([]); // Si se cae el internet o el servidor, no explotamos, solo listamos vacío
+          console.error("No se pudo conectar a la BD, cargando catálogo base:", err);
+          setProductos([...productosBase]); 
+      })
+      .finally(() => {
+          // ¡LA PIEZA FALTANTE! 
+          // Se ejecuta siempre al final (haya éxito o error) y quita el mensaje de carga
+          setCargando(false); 
+          // OJO: Si tu variable de estado se llama "loading" o "setLoading", cámbialo aquí.
       });
   }, []);
   // --- LÓGICA DE FILTRADO ---
