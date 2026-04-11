@@ -3,14 +3,12 @@ import { useCart } from './CartContext';
 import { NavLink } from 'react-router-dom';
 
 const Cotizacion = () => {
-  // IMPORTANTE: Asegúrate de tener actualizarCantidad aquí
   const { carrito, agregarAlCarrito, restarDelCarrito, eliminarDelCarrito, vaciarCarrito, actualizarCantidad } = useCart();
 
   // --- 1. LÓGICA INTELIGENTE DE PRECIOS ---
   const obtenerPrecioUnitario = (item) => {
-    const qty = parseInt(item.cantidad) || 0; // Si está vacío, asume 0 para no romper cálculos
+    const qty = parseInt(item.cantidad) || 0; 
     
-    // Si el producto tiene reglas de mayoreo (Huevos)
     if (item.precio_mayoreo && item.precio_menudeo) {
       return qty >= 100 ? parseFloat(item.precio_mayoreo) : parseFloat(item.precio_menudeo);
     }
@@ -37,7 +35,7 @@ const Cotizacion = () => {
       const precioU = obtenerPrecioUnitario(item);
       const qty = parseInt(item.cantidad) || 0;
       
-      if (qty === 0) return; // Si la cantidad es 0, no lo manda en el mensaje
+      if (qty === 0) return; 
 
       if (precioU > 0) {
         const subtotal = calcularSubtotal(item);
@@ -58,7 +56,8 @@ const Cotizacion = () => {
 
     mensaje += "\n¿Me confirman este pedido y el tiempo de entrega? Quedo atento.";
     
-    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`, '_blank');
+    const url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank', 'noopener,noreferrer'); 
   };
 
   // --- 3. VISTA CUANDO ESTÁ VACÍO ---
@@ -85,7 +84,7 @@ const Cotizacion = () => {
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div className="table-responsive">
-              <table className="table align-middle mb-0">
+              <table className="table align-middle mb-0" style={{ minWidth: '450px' }}>
                 <thead className="bg-light">
                   <tr>
                     <th className="ps-4 py-3">Producto</th>
@@ -103,13 +102,13 @@ const Cotizacion = () => {
 
                     return (
                       <tr key={item.id_producto}>
-                        <td className="ps-4 py-3">
+                        <td className="ps-3 ps-md-4 py-3">
                           <div className="d-flex align-items-center">
                             <img src={item.imagen_url || '/assets/logo-garcar.png'} alt={item.nombre} width="50" height="50" className="rounded-3 me-3 border shadow-sm" style={{objectFit: 'cover'}} />
                             <div>
                               <span className="fw-bold d-block text-dark">{item.nombre}</span>
                               <div className="d-flex align-items-center flex-wrap gap-1 mt-1">
-                                <small className="text-muted border rounded px-1">${precioU.toFixed(2)} c/u</small>
+                                <small className="text-muted border bg-white rounded px-1">${precioU.toFixed(2)} c/u</small>
                                 {aplicaMayoreo && (
                                   <small className="text-success fw-bold ms-1" style={{ fontSize: '0.7rem' }}>
                                     <i className="bi bi-tag-fill"></i> Mayoreo
@@ -120,31 +119,31 @@ const Cotizacion = () => {
                           </div>
                         </td>
                         <td className="text-center py-3">
-                          <div className="btn-group border rounded-pill overflow-hidden shadow-sm mx-auto d-flex" style={{height: '35px', maxWidth: '140px'}}>
-                            <button className="btn btn-light btn-sm px-3 fw-bold text-danger border-end" onClick={() => restarDelCarrito(item.id_producto)}>-</button>
+                          {/* CORRECCIÓN MÓVIL: flex-nowrap y ancho ajustado */}
+                          <div className="btn-group border rounded-pill overflow-hidden shadow-sm mx-auto d-flex flex-nowrap" style={{height: '35px', width: 'fit-content'}}>
+                            <button className="btn btn-light btn-sm px-2 px-sm-3 fw-bold text-danger border-end" onClick={() => restarDelCarrito(item.id_producto)}>-</button>
                             
-                            {/* CAJA DE TEXTO EDITABLE */}
+                            {/* CORRECCIÓN MÓVIL: minWidth obliga al navegador a no aplastar la caja */}
                             <input 
                               type="number" 
-                              className="form-control border-0 text-center fw-bold text-dark px-1 bg-white shadow-none" 
+                              className="form-control border-0 text-center fw-bold text-dark px-0 bg-white shadow-none" 
                               value={item.cantidad} 
                               onChange={(e) => actualizarCantidad(item.id_producto, e.target.value)}
                               onBlur={(e) => {
-                                // Si deja la caja vacía y hace clic fuera, la regresamos a 1
                                 if (item.cantidad === '' || item.cantidad < 1) {
                                   actualizarCantidad(item.id_producto, 1);
                                 }
                               }}
-                              style={{ appearance: 'textfield', MozAppearance: 'textfield' }} // Oculta las flechitas por defecto del navegador
+                              style={{ appearance: 'textfield', MozAppearance: 'textfield', minWidth: '40px', maxWidth: '50px' }} 
                             />
                             
-                            <button className="btn btn-light btn-sm px-3 fw-bold text-success border-start" onClick={() => agregarAlCarrito(item)}>+</button>
+                            <button className="btn btn-light btn-sm px-2 px-sm-3 fw-bold text-success border-start" onClick={() => agregarAlCarrito(item)}>+</button>
                           </div>
                         </td>
                         <td className="text-center py-3">
                           <span className="fw-bold text-dark">${subtotal.toFixed(2)}</span>
                         </td>
-                        <td className="text-end pe-4 py-3">
+                        <td className="text-end pe-3 pe-md-4 py-3">
                           <button className="btn btn-outline-danger btn-sm border-0 rounded-circle" onClick={() => eliminarDelCarrito(item.id_producto)}>
                             <i className="bi bi-trash3"></i>
                           </button>
