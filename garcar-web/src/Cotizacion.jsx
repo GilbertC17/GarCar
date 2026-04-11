@@ -5,18 +5,22 @@ import { NavLink } from 'react-router-dom';
 const Cotizacion = () => {
   const { carrito, agregarAlCarrito, restarDelCarrito, eliminarDelCarrito, vaciarCarrito, actualizarCantidad } = useCart();
 
-  // --- 1. LÓGICA INTELIGENTE DE PRECIOS ---
+  // --- 1. LÓGICA INTELIGENTE DE PRECIOS (BLINDADA) ---
   const obtenerPrecioUnitario = (item) => {
     const qty = parseInt(item.cantidad) || 0; 
     
-    if (item.precio_mayoreo && item.precio_menudeo) {
-      return qty >= 100 ? parseFloat(item.precio_mayoreo) : parseFloat(item.precio_menudeo);
+    // Si tiene precio mayoreo en la BD y lleva 100 o más, aplicamos el descuento
+    if (item.precio_mayoreo && qty >= 100) {
+      return parseFloat(item.precio_mayoreo);
     }
-    return parseFloat(item.precio || 0);
+    
+    // Si no aplica mayoreo, intentamos cobrar el menudeo. Si no existe, usamos el precio base.
+    return parseFloat(item.precio_menudeo || item.precio || 0);
   };
 
   const calcularSubtotal = (item) => {
     const qty = parseInt(item.cantidad) || 0;
+    // ¡AQUÍ ESTÁ LA MAGIA QUE FALTABA! Siempre multiplicamos por la cantidad.
     return obtenerPrecioUnitario(item) * qty;
   };
 
@@ -56,6 +60,7 @@ const Cotizacion = () => {
 
     mensaje += "\n¿Me confirman este pedido y el tiempo de entrega? Quedo atento.";
     
+    // API Universal para que no falle en computadoras ni celulares
     const url = `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank', 'noopener,noreferrer'); 
   };
@@ -119,11 +124,9 @@ const Cotizacion = () => {
                           </div>
                         </td>
                         <td className="text-center py-3">
-                          {/* CORRECCIÓN MÓVIL: flex-nowrap y ancho ajustado */}
                           <div className="btn-group border rounded-pill overflow-hidden shadow-sm mx-auto d-flex flex-nowrap" style={{height: '35px', width: 'fit-content'}}>
                             <button className="btn btn-light btn-sm px-2 px-sm-3 fw-bold text-danger border-end" onClick={() => restarDelCarrito(item.id_producto)}>-</button>
                             
-                            {/* CORRECCIÓN MÓVIL: minWidth obliga al navegador a no aplastar la caja */}
                             <input 
                               type="number" 
                               className="form-control border-0 text-center fw-bold text-dark px-0 bg-white shadow-none" 
