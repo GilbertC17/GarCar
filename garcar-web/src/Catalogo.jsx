@@ -7,6 +7,9 @@ const Catalogo = () => {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todos');
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
+  
+  // NUEVO ESTADO: Controla el mensaje de notificación
+  const [notificacion, setNotificacion] = useState({ visible: false, mensaje: '' });
 
   const { agregarAlCarrito } = useCart();
 
@@ -18,7 +21,6 @@ const Catalogo = () => {
           return res.json();
       })
       .then(data => {
-          // Verificamos estrictamente que la base de datos nos mandó una lista (Array)
           if (Array.isArray(data)) {
               setProductos(data); 
           } else {
@@ -30,10 +32,22 @@ const Catalogo = () => {
           setProductos([]); 
       })
       .finally(() => {
-          // ¡ESTO QUITA LA PANTALLA DE CARGA (SPINNER) SIEMPRE!
           setCargando(false); 
       });
   }, []);
+
+  // --- NUEVA FUNCIÓN: Agregar y mostrar notificación ---
+  const handleAgregarAlCarrito = (producto) => {
+    agregarAlCarrito(producto); // Agrega al carrito (contexto)
+    
+    // Muestra la alerta flotante
+    setNotificacion({ visible: true, mensaje: `${producto.nombre} añadido a tu cotización.` });
+    
+    // La esconde automáticamente después de 3 segundos
+    setTimeout(() => {
+      setNotificacion({ visible: false, mensaje: '' });
+    }, 3000);
+  };
 
   // --- LÓGICA DE FILTRADO ---
   const productosFiltrados = productos.filter(p => {
@@ -49,7 +63,7 @@ const Catalogo = () => {
   // --- LÓGICA INTELIGENTE DE PRECIOS ---
   const renderDesglosePrecios = (p) => {
     
-    // 1. NUEVA LÓGICA: Si el producto tiene datos de Mayoreo/Menudeo en la BD
+    // 1. NUEVA LÓGICA: Mayoreo/Menudeo
     if (p.precio_mayoreo && p.precio_menudeo) {
       return (
         <div className="bg-light p-3 rounded-3 mt-3 mb-3 border border-warning shadow-sm">
@@ -73,13 +87,12 @@ const Catalogo = () => {
       );
     }
 
-    // 2. LÓGICA ORIGINAL: Si no tiene mayoreo (ej. Pollo), o si faltan datos
+    // 2. LÓGICA ORIGINAL: Precio fijo (Pollo)
     if (!p.precio || p.precio <= 0) return null; 
 
     const esHuevo = p.categoria.toLowerCase().includes('huevo');
     const esPollo = p.categoria.toLowerCase().includes('pollo');
 
-    // Cálculos para Huevo Normal (Caja/Cono)
     if (esHuevo) {
       let precioCaja, precioCono;
       if (p.unidad_medida === 'Caja') {
@@ -105,7 +118,6 @@ const Catalogo = () => {
       );
     }
 
-    // Cálculos para Pollo
     if (esPollo) {
       let pesoPromedio = 3.2; 
       if (p.rango_peso) {
@@ -150,7 +162,7 @@ const Catalogo = () => {
   };
 
   return (
-    <div className="d-flex flex-column min-vh-100 bg-light">
+    <div className="d-flex flex-column min-vh-100 bg-light position-relative">
       
       {/* 1. CABECERA DEL CATÁLOGO */}
       <div className="bg-dark text-white py-5 text-center shadow-sm">
@@ -201,7 +213,6 @@ const Catalogo = () => {
           <div className="row g-4">
             {productosFiltrados.length > 0 ? (
               productosFiltrados.map((producto) => {
-                // Filtro Atrapa-Fantasmas para imágenes de la BD
                 let imgProd = producto.imagen_url ? producto.imagen_url.replace('http://localhost:3001', 'https://garcar-api.onrender.com') : '/assets/logo-garcar.png';
 
                 return (
@@ -249,7 +260,7 @@ const Catalogo = () => {
                               <i className="bi bi-x-circle me-2"></i> Agotado
                             </button>
                           ) : (
-                            <button className="btn btn-success w-100 fw-bold py-2 shadow-sm rounded-pill" onClick={() => agregarAlCarrito(producto)}>
+                            <button className="btn btn-success w-100 fw-bold py-2 shadow-sm rounded-pill" onClick={() => handleAgregarAlCarrito(producto)}>
                               <i className="bi bi-cart-plus me-2"></i> Añadir a Cotización
                             </button>
                           )}
@@ -274,7 +285,20 @@ const Catalogo = () => {
         )}
       </main>
 
-      <div className="bg-white border-top py-3 text-center">
+      {/* 4. ALERTA FLOTANTE (TOAST) DE NOTIFICACIÓN */}
+      {notificacion.visible && (
+        <div className="position-fixed bottom-0 end-0 p-4" style={{ zIndex: 1050 }}>
+          <div className="alert alert-success shadow-lg border-0 d-flex align-items-center rounded-4 animate__animated animate__fadeInUp">
+            <i className="bi bi-check-circle-fill fs-4 me-3"></i>
+            <div>
+              <strong className="d-block">¡Excelente!</strong>
+              {notificacion.mensaje}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white border-top py-3 text-center mt-auto">
         <div className="container">
           <p className="text-muted mb-0 small fst-italic">
             Nota: Debido a la naturaleza del mercado, los precios pueden variar sin previo aviso.

@@ -3,39 +3,59 @@ import { useCart } from './CartContext';
 import { NavLink } from 'react-router-dom';
 
 const Cotizacion = () => {
-  // Importamos la nueva función restarDelCarrito
   const { carrito, agregarAlCarrito, restarDelCarrito, eliminarDelCarrito, vaciarCarrito } = useCart();
 
+  // --- 1. LÓGICA INTELIGENTE DE PRECIOS ---
+  const obtenerPrecioUnitario = (item) => {
+    // Si el producto tiene reglas de mayoreo (Huevos)
+    if (item.precio_mayoreo && item.precio_menudeo) {
+      return item.cantidad >= 100 ? parseFloat(item.precio_mayoreo) : parseFloat(item.precio_menudeo);
+    }
+    // Si es un producto normal (Pollo u otro)
+    return parseFloat(item.precio || 0);
+  };
+
+  const calcularSubtotal = (item) => {
+    return obtenerPrecioUnitario(item) * item.cantidad;
+  };
+
+  // Sumatorias globales
+  const totalEstimado = carrito.reduce((total, item) => total + calcularSubtotal(item), 0);
+  const totalBultos = carrito.reduce((total, item) => total + item.cantidad, 0);
+
+  // --- 2. GENERADOR DEL MENSAJE DE WHATSAPP ---
   const enviarWhatsApp = () => {
     const numero = "5212381325482"; 
     let mensaje = "Hola GarCar, me gustaría confirmar este pedido basado en los precios del día de hoy:\n\n";
     
-    let totalEstimado = 0;
     let hayPreciosPendientes = false;
 
     carrito.forEach(item => {
-      if (item.precio > 0) {
-        const subtotal = item.cantidad * item.precio;
-        totalEstimado += subtotal;
-        mensaje += `▪️ ${item.cantidad} x *${item.nombre}* ($${item.precio} c/${item.unidad_medida}) = $${subtotal}\n`;
+      const precioU = obtenerPrecioUnitario(item);
+      
+      if (precioU > 0) {
+        const subtotal = calcularSubtotal(item);
+        const etiquetaMayoreo = (item.precio_mayoreo && item.cantidad >= 100) ? " *(Mayoreo)*" : "";
+        
+        mensaje += `▪️ ${item.cantidad} x *${item.nombre}*${etiquetaMayoreo} ($${precioU.toFixed(2)} c/${item.unidad_medida}) = $${subtotal.toFixed(2)}\n`;
       } else {
         hayPreciosPendientes = true;
         mensaje += `▪️ ${item.cantidad} x *${item.nombre}* (Precio a consultar)\n`;
       }
     });
 
-    mensaje += `\n*Total Estimado:* $${totalEstimado} MXN\n`;
+    mensaje += `\n*Total Estimado:* $${totalEstimado.toFixed(2)} MXN\n`;
     
-    if (hayPreciosPendientes) {
-      mensaje += `_(Nota: El total variará porque hay productos pendientes de precio)_\n`;
+    if (hayPreciosPendientes || carrito.some(i => i.categoria.toLowerCase().includes('pollo'))) {
+      mensaje += `_(Nota: El total variará porque hay productos pendientes de precio o el pollo se vende por peso exacto en báscula)_\n`;
     }
 
     mensaje += "\n¿Me confirman este pedido y el tiempo de entrega? Quedo atento.";
     
-    // encodeURIComponent formatea todo el texto perfectamente para URLs de WhatsApp
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`, '_blank');
   };
 
+  // --- 3. VISTA CUANDO ESTÁ VACÍO ---
   if (carrito.length === 0) {
     return (
       <div className="container py-5 text-center vh-100 d-flex flex-column justify-content-center">
@@ -49,6 +69,7 @@ const Cotizacion = () => {
     );
   }
 
+  // --- 4. VISTA PRINCIPAL (CON PRODUCTOS) ---
   return (
     <div className="container py-5 min-vh-100">
       <h2 className="fw-bold mb-4 border-bottom pb-3">Mi Cotización</h2>
@@ -63,37 +84,52 @@ const Cotizacion = () => {
                   <tr>
                     <th className="ps-4 py-3">Producto</th>
                     <th className="text-center py-3">Cantidad</th>
+                    <th className="text-center py-3">Subtotal</th>
                     <th className="text-end pe-4 py-3">Quitar</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {carrito.map(item => (
-                    <tr key={item.id_producto}>
-                      <td className="ps-4 py-3">
-                        <div className="d-flex align-items-center">
-                          <img src={item.imagen_url || '/assets/logo-garcar.png'} alt={item.nombre} width="50" height="50" className="rounded-3 me-3 border shadow-sm" style={{objectFit: 'cover'}} />
-                          <div>
-                            <span className="fw-bold d-block text-dark">{item.nombre}</span>
-                            <small className="text-muted">{item.unidad_medida}</small>
+                  {carrito.map(item => {
+                    const precioU = obtenerPrecioUnitario(item);
+                    const subtotal = calcularSubtotal(item);
+                    const aplicaMayoreo = item.precio_mayoreo && item.cantidad >= 100;
+
+                    return (
+                      <tr key={item.id_producto}>
+                        <td className="ps-4 py-3">
+                          <div className="d-flex align-items-center">
+                            <img src={item.imagen_url || '/assets/logo-garcar.png'} alt={item.nombre} width="50" height="50" className="rounded-3 me-3 border shadow-sm" style={{objectFit: 'cover'}} />
+                            <div>
+                              <span className="fw-bold d-block text-dark">{item.nombre}</span>
+                              <div className="d-flex align-items-center flex-wrap gap-1 mt-1">
+                                <small className="text-muted border rounded px-1">${precioU.toFixed(2)} c/u</small>
+                                {aplicaMayoreo && (
+                                  <small className="text-success fw-bold ms-1" style={{ fontSize: '0.7rem' }}>
+                                    <i className="bi bi-tag-fill"></i> Mayoreo
+                                  </small>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="text-center py-3">
-                        <div className="btn-group border rounded-pill overflow-hidden shadow-sm" style={{height: '35px'}}>
-                          {/* BOTÓN CONECTADO */}
-                          <button className="btn btn-light btn-sm px-3 fw-bold text-danger border-end" onClick={() => restarDelCarrito(item.id_producto)}>-</button>
-                          <span className="px-3 d-flex align-items-center fw-bold bg-white text-dark">{item.cantidad}</span>
-                          {/* BOTÓN CONECTADO */}
-                          <button className="btn btn-light btn-sm px-3 fw-bold text-success border-start" onClick={() => agregarAlCarrito(item)}>+</button>
-                        </div>
-                      </td>
-                      <td className="text-end pe-4 py-3">
-                        <button className="btn btn-outline-danger btn-sm border-0 rounded-circle" onClick={() => eliminarDelCarrito(item.id_producto)}>
-                          <i className="bi bi-trash3"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="text-center py-3">
+                          <div className="btn-group border rounded-pill overflow-hidden shadow-sm mx-auto" style={{height: '35px', maxWidth: '120px'}}>
+                            <button className="btn btn-light btn-sm px-3 fw-bold text-danger border-end" onClick={() => restarDelCarrito(item.id_producto)}>-</button>
+                            <span className="px-3 d-flex align-items-center justify-content-center fw-bold bg-white text-dark w-100">{item.cantidad}</span>
+                            <button className="btn btn-light btn-sm px-3 fw-bold text-success border-start" onClick={() => agregarAlCarrito(item)}>+</button>
+                          </div>
+                        </td>
+                        <td className="text-center py-3">
+                          <span className="fw-bold text-dark">${subtotal.toFixed(2)}</span>
+                        </td>
+                        <td className="text-end pe-4 py-3">
+                          <button className="btn btn-outline-danger btn-sm border-0 rounded-circle" onClick={() => eliminarDelCarrito(item.id_producto)}>
+                            <i className="bi bi-trash3"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -102,21 +138,28 @@ const Cotizacion = () => {
 
         {/* RESUMEN Y ENVÍO */}
         <div className="col-lg-4">
-          {/* AQUÍ ESTÁ LA CORRECCIÓN DEL TOP: Cambiamos 100px a 150px y agregamos z-index */}
           <div className="card border-0 shadow-sm rounded-4 p-4 sticky-top" style={{ top: '150px', zIndex: 1 }}>
             <h5 className="fw-bold mb-4 text-dark">Resumen de Pedido</h5>
+            
             <div className="d-flex justify-content-between mb-2">
               <span className="text-secondary">Productos distintos:</span>
               <span className="fw-bold text-dark">{carrito.length}</span>
             </div>
-            <div className="d-flex justify-content-between mb-4 border-top pt-3">
+            
+            <div className="d-flex justify-content-between mb-3 border-top pt-3">
               <span className="text-dark fw-bold fs-5">Total de bultos:</span>
-              <span className="text-danger fw-bold fs-5">{carrito.reduce((t, i) => t + i.cantidad, 0)}</span>
+              <span className="text-danger fw-bold fs-5">{totalBultos}</span>
+            </div>
+
+            {/* SECCIÓN DEL TOTAL ESTIMADO (NUEVO) */}
+            <div className="d-flex justify-content-between mb-4 align-items-end bg-light p-3 rounded-3 border">
+              <span className="text-dark fw-bold fs-5 mb-1">Total Estimado:</span>
+              <span className="text-success fw-bold fs-3 lh-1">${totalEstimado.toFixed(2)}</span>
             </div>
             
-            <div className="alert alert-warning py-2 small border-0 mb-4 rounded-3 shadow-sm">
-              <i className="bi bi-info-circle me-2"></i>
-              Los precios finales se confirmarán vía WhatsApp según el mercado de hoy.
+            <div className="alert alert-warning py-2 small border-0 mb-4 rounded-3 shadow-sm d-flex gap-2">
+              <i className="bi bi-info-circle mt-1"></i>
+              <span>Los precios finales se confirmarán vía WhatsApp según el mercado de hoy (y el pesaje en caso del pollo).</span>
             </div>
 
             <button onClick={enviarWhatsApp} className="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm mb-3 transition-all hover-scale">
