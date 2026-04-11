@@ -46,26 +46,51 @@ const Catalogo = () => {
 
   const categorias = ['Todos', 'Pollo', 'Huevo'];
 
-  // --- LÓGICA INTELIGENTE DE PRECIOS ORIGINAL ---
+  // --- LÓGICA INTELIGENTE DE PRECIOS ---
   const renderDesglosePrecios = (p) => {
-    if (!p.precio || p.precio <= 0) return null; // Si no hay precio, no mostramos cálculo
+    
+    // 1. NUEVA LÓGICA: Si el producto tiene datos de Mayoreo/Menudeo en la BD
+    if (p.precio_mayoreo && p.precio_menudeo) {
+      return (
+        <div className="bg-light p-3 rounded-3 mt-3 mb-3 border border-warning shadow-sm">
+          {/* Menudeo */}
+          <div className="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+            <div>
+              <span className="fw-bold text-secondary d-block">Menudeo</span>
+              <span className="small text-muted">{p.rango_menudeo}</span>
+            </div>
+            <span className="fs-5 fw-bold text-dark">${p.precio_menudeo}</span>
+          </div>
+          {/* Mayoreo */}
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <span className="fw-bold text-success d-block">Mayoreo</span>
+              <span className="small text-muted">{p.rango_mayoreo}</span>
+            </div>
+            <span className="fs-4 fw-bold text-success">${p.precio_mayoreo}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // 2. LÓGICA ORIGINAL: Si no tiene mayoreo (ej. Pollo), o si faltan datos
+    if (!p.precio || p.precio <= 0) return null; 
 
     const esHuevo = p.categoria.toLowerCase().includes('huevo');
     const esPollo = p.categoria.toLowerCase().includes('pollo');
 
-    // 1. CÁLCULOS PARA HUEVO
+    // Cálculos para Huevo Normal (Caja/Cono)
     if (esHuevo) {
       let precioCaja, precioCono;
       if (p.unidad_medida === 'Caja') {
         precioCaja = parseFloat(p.precio);
-        precioCono = precioCaja / 12; // 1 Caja = 12 Conos
+        precioCono = precioCaja / 12; 
       } else if (p.unidad_medida === 'Cono') {
         precioCono = parseFloat(p.precio);
         precioCaja = precioCono * 12;
       } else {
         return null;
       }
-
       return (
         <div className={`d-flex justify-content-between p-2 rounded-3 mt-3 mb-3 border border-2 ${p.estado === 'Agotado' ? 'bg-light border-secondary opacity-50' : 'bg-white border-warning'}`}>
           <div className="text-center w-50 border-end">
@@ -80,10 +105,9 @@ const Catalogo = () => {
       );
     }
 
-    // 2. CÁLCULOS PARA POLLO
+    // Cálculos para Pollo
     if (esPollo) {
-      let pesoPromedio = 3.2; // Peso por defecto
-      
+      let pesoPromedio = 3.2; 
       if (p.rango_peso) {
         const numeros = p.rango_peso.match(/[\d.]+/g); 
         if (numeros && numeros.length >= 2) {
