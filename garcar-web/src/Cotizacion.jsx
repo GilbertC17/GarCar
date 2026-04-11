@@ -3,25 +3,28 @@ import { useCart } from './CartContext';
 import { NavLink } from 'react-router-dom';
 
 const Cotizacion = () => {
-  const { carrito, agregarAlCarrito, restarDelCarrito, eliminarDelCarrito, vaciarCarrito } = useCart();
+  // IMPORTANTE: Asegúrate de tener actualizarCantidad aquí
+  const { carrito, agregarAlCarrito, restarDelCarrito, eliminarDelCarrito, vaciarCarrito, actualizarCantidad } = useCart();
 
   // --- 1. LÓGICA INTELIGENTE DE PRECIOS ---
   const obtenerPrecioUnitario = (item) => {
+    const qty = parseInt(item.cantidad) || 0; // Si está vacío, asume 0 para no romper cálculos
+    
     // Si el producto tiene reglas de mayoreo (Huevos)
     if (item.precio_mayoreo && item.precio_menudeo) {
-      return item.cantidad >= 100 ? parseFloat(item.precio_mayoreo) : parseFloat(item.precio_menudeo);
+      return qty >= 100 ? parseFloat(item.precio_mayoreo) : parseFloat(item.precio_menudeo);
     }
-    // Si es un producto normal (Pollo u otro)
     return parseFloat(item.precio || 0);
   };
 
   const calcularSubtotal = (item) => {
-    return obtenerPrecioUnitario(item) * item.cantidad;
+    const qty = parseInt(item.cantidad) || 0;
+    return obtenerPrecioUnitario(item) * qty;
   };
 
   // Sumatorias globales
   const totalEstimado = carrito.reduce((total, item) => total + calcularSubtotal(item), 0);
-  const totalBultos = carrito.reduce((total, item) => total + item.cantidad, 0);
+  const totalBultos = carrito.reduce((total, item) => total + (parseInt(item.cantidad) || 0), 0);
 
   // --- 2. GENERADOR DEL MENSAJE DE WHATSAPP ---
   const enviarWhatsApp = () => {
@@ -32,15 +35,18 @@ const Cotizacion = () => {
 
     carrito.forEach(item => {
       const precioU = obtenerPrecioUnitario(item);
+      const qty = parseInt(item.cantidad) || 0;
       
+      if (qty === 0) return; // Si la cantidad es 0, no lo manda en el mensaje
+
       if (precioU > 0) {
         const subtotal = calcularSubtotal(item);
-        const etiquetaMayoreo = (item.precio_mayoreo && item.cantidad >= 100) ? " *(Mayoreo)*" : "";
+        const etiquetaMayoreo = (item.precio_mayoreo && qty >= 100) ? " *(Mayoreo)*" : "";
         
-        mensaje += `▪️ ${item.cantidad} x *${item.nombre}*${etiquetaMayoreo} ($${precioU.toFixed(2)} c/${item.unidad_medida}) = $${subtotal.toFixed(2)}\n`;
+        mensaje += `▪️ ${qty} x *${item.nombre}*${etiquetaMayoreo} ($${precioU.toFixed(2)} c/${item.unidad_medida}) = $${subtotal.toFixed(2)}\n`;
       } else {
         hayPreciosPendientes = true;
-        mensaje += `▪️ ${item.cantidad} x *${item.nombre}* (Precio a consultar)\n`;
+        mensaje += `▪️ ${qty} x *${item.nombre}* (Precio a consultar)\n`;
       }
     });
 
@@ -92,7 +98,8 @@ const Cotizacion = () => {
                   {carrito.map(item => {
                     const precioU = obtenerPrecioUnitario(item);
                     const subtotal = calcularSubtotal(item);
-                    const aplicaMayoreo = item.precio_mayoreo && item.cantidad >= 100;
+                    const qty = parseInt(item.cantidad) || 0;
+                    const aplicaMayoreo = item.precio_mayoreo && qty >= 100;
 
                     return (
                       <tr key={item.id_producto}>
@@ -113,9 +120,24 @@ const Cotizacion = () => {
                           </div>
                         </td>
                         <td className="text-center py-3">
-                          <div className="btn-group border rounded-pill overflow-hidden shadow-sm mx-auto" style={{height: '35px', maxWidth: '120px'}}>
+                          <div className="btn-group border rounded-pill overflow-hidden shadow-sm mx-auto d-flex" style={{height: '35px', maxWidth: '140px'}}>
                             <button className="btn btn-light btn-sm px-3 fw-bold text-danger border-end" onClick={() => restarDelCarrito(item.id_producto)}>-</button>
-                            <span className="px-3 d-flex align-items-center justify-content-center fw-bold bg-white text-dark w-100">{item.cantidad}</span>
+                            
+                            {/* CAJA DE TEXTO EDITABLE */}
+                            <input 
+                              type="number" 
+                              className="form-control border-0 text-center fw-bold text-dark px-1 bg-white shadow-none" 
+                              value={item.cantidad} 
+                              onChange={(e) => actualizarCantidad(item.id_producto, e.target.value)}
+                              onBlur={(e) => {
+                                // Si deja la caja vacía y hace clic fuera, la regresamos a 1
+                                if (item.cantidad === '' || item.cantidad < 1) {
+                                  actualizarCantidad(item.id_producto, 1);
+                                }
+                              }}
+                              style={{ appearance: 'textfield', MozAppearance: 'textfield' }} // Oculta las flechitas por defecto del navegador
+                            />
+                            
                             <button className="btn btn-light btn-sm px-3 fw-bold text-success border-start" onClick={() => agregarAlCarrito(item)}>+</button>
                           </div>
                         </td>
@@ -151,7 +173,6 @@ const Cotizacion = () => {
               <span className="text-danger fw-bold fs-5">{totalBultos}</span>
             </div>
 
-            {/* SECCIÓN DEL TOTAL ESTIMADO (NUEVO) */}
             <div className="d-flex justify-content-between mb-4 align-items-end bg-light p-3 rounded-3 border">
               <span className="text-dark fw-bold fs-5 mb-1">Total Estimado:</span>
               <span className="text-success fw-bold fs-3 lh-1">${totalEstimado.toFixed(2)}</span>

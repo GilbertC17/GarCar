@@ -19,6 +19,20 @@ export const CartProvider = ({ children }) => {
     });
   };
 
+  const actualizarCantidad = (id, nuevaCantidad) => {
+    // Si el usuario borra el número, permitimos que quede vacío temporalmente
+    if (nuevaCantidad === '') {
+      setCarrito(carrito.map(item => item.id_producto === id ? { ...item, cantidad: '' } : item));
+      return;
+    }
+    
+    // Convertimos lo que escriba a número
+    const cantidadNum = parseInt(nuevaCantidad);
+    if (!isNaN(cantidadNum) && cantidadNum >= 0) {
+      setCarrito(carrito.map(item => item.id_producto === id ? { ...item, cantidad: cantidadNum } : item));
+    }
+  };
+
   // --- NUEVA FUNCIÓN PARA RESTAR ---
   const restarDelCarrito = (id) => {
     setCarrito((prevCarrito) => {
@@ -41,7 +55,7 @@ export const CartProvider = ({ children }) => {
 
   // No olvides exportar la nueva función aquí abajo:
   return (
-    <CartContext.Provider value={{ carrito, agregarAlCarrito, restarDelCarrito, eliminarDelCarrito, vaciarCarrito }}>
+    <CartContext.Provider value={{ carrito, agregarAlCarrito, restarDelCarrito, eliminarDelCarrito, vaciarCarrito, actualizarCantidad }}>
       {children}
     </CartContext.Provider>
   );
